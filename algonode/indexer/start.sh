@@ -3,25 +3,33 @@
 # algorand-indexer need some args
 # also needs genesis.json file
 
-# docker network prefix
-export COMPOSE_PROJECT_NAME=algo
+# we need docker-compose and pm2 to start this application
+# check docker-compose cli exist
+if [ -z `which docker-compose` ]; then
+    echo "No docker-compose cli"
+    exit 1
+fi
 
-# postgres db ocnfig
-export PG_HOST="192.168.2.133"
-export PG_PORT="5432"
-export PG_USER="algorand"
-export PG_PASSWD="indexer"
-export PG_DB="pgdb"
-export PG_HOST_VOLUME="~/.algoindexer/pgdata"
+# check pm2 cli exist
+if [ -z `which pm2` ]; then
+    echo "No pm2 cli"
+    exit 1
+fi
 
-export PARG="host=$PG_HOST port=$PG_PORT user=$PG_USER password=$PG_PASSWD dbname=$PG_DB sslmode=disable"
+# check if env.sh exist
+if [ ! -f "./env.sh" ]; then
+    echo "No env.sh, copy envexample.sh env.sh"
+    exit 1
+fi
 
-# algo node config
-export ALGONET="http://192.168.2.31:8080"
-export ALGOTOKEN="65a03e7551a31d94ec0439a008eaa86f8d7f41fd75a2f6a8de588d963cc6f530"
+. ./env.sh
 
-# genesis.json path
-export GENESIS=./genesis.json
+# check if algorand-indexer binary file exist
+if [ -z `which algorand-indexer` ]; then
+    echo "No algorand-indexer in PATH"
+    exit 1
+fi
+
 
 # 1. start db
 echo "start postgres..."
@@ -31,7 +39,6 @@ echo "start postgres done"
 
 # start foreground
 # ./algorand-indexer daemon -P "$PARG" --algod-net $ALGONET --algod-token $ALGOTOKEN --genesis $GENESIS
-
+PARG="host=$PG_HOST port=$PG_PORT user=$PG_USER password=$PG_PASSWD dbname=$PG_DB sslmode=disable"
 set -x
-pm2 start algorand-indexer -- daemon -P "$PARG" --algod-net $ALGONET --algod-token $ALGOTOKEN --genesis $GENESIS
-
+pm2 start algorand-indexer -- daemon -S $INDEXER_ADDR -P "$PARG" --algod-net $ALGONET --algod-token $ALGOTOKEN --genesis $GENESIS

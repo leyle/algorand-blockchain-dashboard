@@ -5,8 +5,8 @@ networks:
 
 services:
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:$PG_IMAGE_TAG
+    container_name: $PG_CONTAINER_NAME
     environment:
       - POSTGRES_DB=$PG_DB
       - POSTGRES_USER=$PG_USER
